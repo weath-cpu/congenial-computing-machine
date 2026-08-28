@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shenanigans</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <style>
+    :root {
+      --bg-color: #0b0f17;
+      --card-bg: rgba(18, 24, 38, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f3f4f6;
+      --text-muted: #8b949e;
+      --text-dim: #4b5563;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --success: #10b981;
+      --danger: #ef4444;
+      --input-bg: #0e131f;
+      --input-border: rgba(255, 255, 255, 0.1);
+      --code-bg: #080c14;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-color);
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 35%),
+        radial-gradient(circle at 90% 90%, rgba(139, 92, 246, 0.06) 0%, transparent 35%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 1.25rem 1rem;
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 660px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    /* Compact Top Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0 0.2rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-shrink: 0;
+    }
+
+    .brand-badge {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    /* Search Bar */
+    .search-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 1;
+      max-width: 260px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.65rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-wrapper input {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: 0.42rem 1.8rem 0.42rem 2rem;
+      font-family: inherit;
+      font-size: 0.8rem;
+      color: #ffffff;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .search-wrapper input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    .search-wrapper input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .search-kbd {
+      position: absolute;
+      right: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      pointer-events: none;
+    }
+
+    /* Tools Container */
+    .tools-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    /* Tool Card */
+    .tool-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      transition: border-color 0.15s ease;
+    }
+
+    .tool-card:hover {
+      border-color: rgba(255, 255, 255, 0.13);
+    }
+
+    .tool-head-compact {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+    }
+
+    .tool-info-compact {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .tool-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #818cf8;
+      box-shadow: 0 0 8px rgba(129, 140, 248, 0.6);
+    }
+
+    .tool-name {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #f3f4f6;
+      letter-spacing: -0.01em;
+    }
+
+    .tool-badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    /* Body / Input Row */
+    .tool-body-compact {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .compact-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .input-field-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-field-wrap input {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 7px;
+      padding: 0.45rem 2rem 0.45rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #ffffff;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .input-field-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    .input-field-wrap input::placeholder {
+      color: #4b5563;
+      font-family: var(--font-sans);
+      font-size: 0.775rem;
+    }
+
+    .icon-action-btn {
+      position: absolute;
+      right: 0.35rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .icon-action-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
+    /* Buttons */
+    .btn-compact {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.45rem 0.7rem;
+      border-radius: 7px;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      transition: all 0.12s ease;
+      user-select: none;
+    }
+
+    .btn-subtle {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    .btn-subtle:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #f3f4f6;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .btn-action.copied {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+
+    .btn-accent {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+
+    .btn-accent:hover {
+      background: #4338ca;
+    }
+
+    /* Result Row Compact */
+    .result-row-compact {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      background: var(--code-bg);
+      border: 1px solid rgba(99, 102, 241, 0.28);
+      border-radius: 7px;
+      padding: 0.4rem 0.55rem 0.4rem 0.7rem;
+      animation: fadeIn 0.15s ease-out;
+    }
+
+    .result-url-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow: hidden;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .tag-id {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      background: rgba(99, 102, 241, 0.18);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.08rem 0.35rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .output-url-text {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #38bdf8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: all;
+    }
+
+    .result-btns {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-shrink: 0;
+    }
+
+    /* Inline Error */
+    .error-inline {
+      font-size: 0.72rem;
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      animation: fadeIn 0.15s ease;
+    }
+
+    /* Empty search state */
+    .no-tools-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-2px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 540px) {
+      .compact-input-row {
+        flex-wrap: wrap;
+      }
+      .input-field-wrap {
+        width: 100%;
+        flex: 1 1 100%;
+      }
+      .result-row-compact {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .result-btns {
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Compact Top Bar with Brand & Search -->
+    <header class="top-bar">
+      <div class="brand">
+        <span class="brand-badge">-b</span>
+        <h1 class="brand-title">shenanigans</h1>
+      </div>
+
+      <div class="search-wrapper">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input 
+          type="text" 
+          id="tools-search" 
+          placeholder="Search tools..." 
+          autocomplete="off" 
+          spellcheck="false"
+        />
+        <kbd class="search-kbd">/</kbd>
+      </div>
+    </header>
+
+    <!-- Tools Container -->
+    <main class="tools-container" id="tools-container">
+      
+      <!-- Wordmint Tool Card (Ultra Compact) -->
+      <article class="tool-card" data-tool-id="wordmint" data-keywords="wordmint answer key downloader puzzle pdf solver cheats">
+        <div class="tool-head-compact">
+          <div class="tool-info-compact">
+            <span class="tool-dot"></span>
+            <h2 class="tool-name">Wordmint Answer Key Downloader</h2>
+          </div>
+          <span class="tool-badge">PDF Generator</span>
+        </div>
+
+        <div class="tool-body-compact">
+          <div class="compact-input-row">
+            <div class="input-field-wrap">
+              <input 
+                type="text" 
+                id="puzzle-input" 
+                placeholder="Paste Wordmint URL or puzzle ID (e.g. 1509079)" 
+                autocomplete="off" 
+                spellcheck="false"
+              />
+              <button type="button" id="clear-btn" class="icon-action-btn hidden" title="Clear">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            
+            <button type="button" id="paste-btn" class="btn-compact btn-subtle" title="Paste clipboard">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              </svg>
+              <span>Paste</span>
+            </button>
+            
+            <button type="button" id="sample-btn" class="btn-compact btn-subtle" title="Try demo ID">
+              Sample
+            </button>
+          </div>
+
+          <!-- Dynamic Output Row -->
+          <div id="result-box" class="result-row-compact hidden">
+            <div class="result-url-wrap">
+              <span class="tag-id" id="detected-id">1509079</span>
+              <span id="output-url" class="output-url-text"></span>
+            </div>
+            <div class="result-btns">
+              <button type="button" id="copy-btn" class="btn-compact btn-action" title="Copy download link">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span id="copy-text">Copy</span>
+              </button>
+              <a id="open-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-compact btn-accent" title="Open PDF">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                <span>Open PDF</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Compact Error Feedback -->
+          <div id="error-box" class="error-inline hidden">
+            <span>Invalid Wordmint link or ID. Paste a valid URL or numeric puzzle ID.</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Empty Search State -->
+      <div id="no-tools-msg" class="no-tools-state hidden">
+        <p>No tools matched "<span id="search-query-display"></span>"</p>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // Extract Wordmint puzzle ID from input string
+    function extractPuzzleId(input) {
+      if (!input) return null;
+      const trimmed = input.trim();
+
+      // Pure numeric ID
+      if (/^\d+$/.test(trimmed)) {
+        return trimmed;
+      }
+
+      // URL patterns:
+      // - https://wordmint.com/public_puzzles/1509079
+      // - https://wordmint.com/puzzles/1509079/pdf...
+      // - wordmint.com/public_puzzles/1509079
+      const urlMatch = trimmed.match(/(?:public_puzzles|puzzles)\/(\d+)/i);
+      if (urlMatch && urlMatch[1]) {
+        return urlMatch[1];
+      }
+
+      // General fallback: if wordmint is in string, find sequence of 4+ digits
+      if (/wordmint/i.test(trimmed)) {
+        const digitMatch = trimmed.match(/(\d{4,})/);
+        if (digitMatch && digitMatch[1]) {
+          return digitMatch[1];
+        }
+      }
+
+      return null;
+    }
+
+    function generateAnswerKeyUrl(id) {
+      return `https://wordmint.com/puzzles/${id}/pdf?answer_key=true`;
+    }
+
+    // Wordmint Tool Elements
+    const inputEl = document.getElementById('puzzle-input');
+    const clearBtn = document.getElementById('clear-btn');
+    const pasteBtn = document.getElementById('paste-btn');
+    const sampleBtn = document.getElementById('sample-btn');
+    const resultBox = document.getElementById('result-box');
+    const errorBox = document.getElementById('error-box');
+    const detectedIdEl = document.getElementById('detected-id');
+    const outputUrlEl = document.getElementById('output-url');
+    const openLinkEl = document.getElementById('open-link');
+    const copyBtn = document.getElementById('copy-btn');
+    const copyTextEl = document.getElementById('copy-text');
+
+    // Search Elements
+    const searchInput = document.getElementById('tools-search');
+    const toolCards = document.querySelectorAll('.tool-card');
+    const noToolsMsg = document.getElementById('no-tools-msg');
+    const searchQueryDisplay = document.getElementById('search-query-display');
+
+    let currentGeneratedUrl = '';
+    let copyResetTimeout = null;
+
+    function processWordmintInput() {
+      const value = inputEl.value.trim();
+
+      if (value.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+
+      if (!value) {
+        resultBox.classList.add('hidden');
+        errorBox.classList.add('hidden');
+        currentGeneratedUrl = '';
+        return;
+      }
+
+      const id = extractPuzzleId(value);
+
+      if (id) {
+        const targetUrl = generateAnswerKeyUrl(id);
+        currentGeneratedUrl = targetUrl;
+        
+        detectedIdEl.textContent = `ID: ${id}`;
+        outputUrlEl.textContent = targetUrl;
+        openLinkEl.href = targetUrl;
+        
+        resultBox.classList.remove('hidden');
+        errorBox.classList.add('hidden');
+      } else {
+        resultBox.classList.add('hidden');
+        errorBox.classList.remove('hidden');
+        currentGeneratedUrl = '';
+      }
+    }
+
+    // Wordmint Listeners
+    inputEl.addEventListener('input', processWordmintInput);
+
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentGeneratedUrl) {
+          window.open(currentGeneratedUrl, '_blank', 'noopener,noreferrer');
+        }
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      inputEl.value = '';
+      inputEl.focus();
+      processWordmintInput();
+    });
+
+    sampleBtn.addEventListener('click', () => {
+      inputEl.value = 'https://wordmint.com/public_puzzles/1509079';
+      processWordmintInput();
+      inputEl.focus();
+    });
+
+    pasteBtn.addEventListener('click', async () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            inputEl.value = text;
+            processWordmintInput();
+          }
+        } else {
+          inputEl.focus();
+        }
+      } catch {
+        inputEl.focus();
+      }
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      if (!currentGeneratedUrl) return;
+
+      try {
+        await navigator.clipboard.writeText(currentGeneratedUrl);
+      } catch {
+        const textArea = document.createElement('textarea');
+        textArea.value = currentGeneratedUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+
+      copyBtn.classList.add('copied');
+      copyTextEl.textContent = 'Copied!';
+
+      if (copyResetTimeout) clearTimeout(copyResetTimeout);
+      copyResetTimeout = setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyTextEl.textContent = 'Copy';
+      }, 1800);
+    });
+
+    // Search functionality
+    function filterTools() {
+      const query = searchInput.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      toolCards.forEach(card => {
+        const name = card.querySelector('.tool-name')?.textContent.toLowerCase() || '';
+        const keywords = card.getAttribute('data-keywords')?.toLowerCase() || '';
+        const matches = !query || name.includes(query) || keywords.includes(query);
+
+        if (matches) {
+          card.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      if (visibleCount === 0) {
+        searchQueryDisplay.textContent = query;
+        noToolsMsg.classList.remove('hidden');
+      } else {
+        noToolsMsg.classList.add('hidden');
+      }
+    }
+
+    searchInput.addEventListener('input', filterTools);
+
+    // Global shortcut for search ('/' to focus)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement !== searchInput && document.activeElement !== inputEl) {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+      } else if (e.key === 'Escape' && document.activeElement === searchInput) {
+        searchInput.value = '';
+        filterTools();
+        searchInput.blur();
+      }
+    });
+
+    // Focus puzzle input by default
+    inputEl.focus();
+  </script>
+</body>
+</html>
