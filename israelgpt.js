@@ -2,7 +2,7 @@
   if (!window.RELAY_DOMAIN) return;
   let urls;
   try {
-    const res = await fetch(`${window.RELAY_DOMAIN}israel-link.js`);
+    const res = await fetch(`${window.RELAY_DOMAIN}israel-links.js`);
     if (!res.ok) return;
     const text = await res.text();
     urls = text.split("\n").map(l => l.trim()).filter(l => l.includes(".") && l.includes("/") && l.includes(":"));
