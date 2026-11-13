@@ -5,14 +5,14 @@
     let urls;
 
     /*
-     * Fetch the plain-text URL list.
+     * FETCH URL LIST
      */
     try {
         const res = await fetch(
             `${window.RELAY_DOMAIN}israel-links.js`
         );
 
-        if (!res.ok) return;
+        if (!res.ok) throw new Error("Fetch failed");
 
         const text = await res.text();
 
@@ -20,8 +20,6 @@
             .split(/\r?\n/)
             .map(line => line.trim())
             .filter(line => {
-                if (!line) return false;
-
                 try {
                     const url = new URL(line);
 
@@ -34,26 +32,76 @@
                 }
             });
 
-        if (!urls.length) return;
+        if (!urls.length) {
+            alert("No valid links were found.");
+            return;
+        }
 
-        // Notify once the URL list has been fetched.
         alert(`Successfully fetched ${urls.length} links!`);
 
     } catch (error) {
-        console.error("Failed to fetch links:", error);
+        console.error(error);
+        alert("Failed to fetch the link list.");
         return;
     }
 
-    const addSf = u =>
-        u + (u.includes("?") ? "&" : "?") + "sf";
+    /*
+     * SELECTION MENU
+     */
+    document.body.textContent = "";
+    document.body.style.cssText = `
+        margin: 0;
+        background: #000;
+        color: #fff;
+        font-family: sans-serif;
+        min-height: 100vh;
+        padding: 30px;
+        box-sizing: border-box;
+    `;
+
+    const container = document.createElement("div");
+
+    container.style.cssText = `
+        max-width: 650px;
+        margin: 50px auto;
+    `;
+
+    const heading = document.createElement("h2");
+    heading.textContent = "Choose a link";
+
+    const description = document.createElement("p");
+    description.textContent =
+        `${urls.length} links available. Select one to continue.`;
+
+    const list = document.createElement("div");
+
+    list.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    `;
+
+    container.append(heading, description, list);
+    document.body.appendChild(container);
+
+    /*
+     * LOAD SELECTED LINK
+     */
+    const addSf = url =>
+        url + (url.includes("?") ? "&" : "?") + "sf";
 
     const test = (url, ctrl) => new Promise((resolve, reject) => {
         const f = document.createElement("iframe");
 
-        f.style.cssText =
-            "display:none;z-index:2147483647;" +
-            "border:none;height:100vh;width:100vw;" +
-            "left:0;top:0;position:fixed;";
+        f.style.cssText = `
+            display: none;
+            border: none;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            left: 0;
+            top: 0;
+        `;
 
         document.body.appendChild(f);
 
@@ -72,7 +120,7 @@
             done = true;
             cleanup();
             f.remove();
-            reject();
+            reject(new Error("Link failed"));
         };
 
         const verify = () => {
@@ -83,7 +131,6 @@
                 if (
                     !href ||
                     href === "about:blank" ||
-                    href.includes("-extension:") ||
                     new URL(href).hostname !== host
                 ) {
                     return false;
@@ -139,32 +186,62 @@
         f.src = addSf(url);
     });
 
-    const ctrls = urls.map(() => new AbortController());
+    /*
+     * CREATE LINK BUTTONS
+     */
+    urls.forEach((url, index) => {
+        const button = document.createElement("button");
 
-    try {
-        const {
-            f: win,
-            i: winIdx
-        } = await Promise.any(
-            urls.map((u, i) =>
-                test(u, ctrls[i]).then(f => ({
-                    f,
-                    i
-                }))
-            )
-        );
+        button.textContent = url;
 
-        ctrls.forEach((c, i) => {
-            if (i !== winIdx) c.abort();
+        button.style.cssText = `
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #171717;
+            color: white;
+            border: 1px solid #333;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            overflow-wrap: anywhere;
+            font-size: 14px;
+        `;
+
+        button.addEventListener("mouseenter", () => {
+            button.style.background = "#292929";
         });
 
-        Array.from(document.body.children).forEach(c => {
-            if (c !== win) c.remove();
+        button.addEventListener("mouseleave", () => {
+            button.style.background = "#171717";
         });
 
-        win.style.display = "block";
+        button.addEventListener("click", async () => {
+            if (button.disabled) return;
 
-    } catch {
-        console.warn("No links successfully loaded.");
-    }
+            button.disabled = true;
+            button.textContent = "Loading...";
+
+            const controller = new AbortController();
+
+            try {
+                const frame = await test(
+                    url,
+                    controller
+                );
+
+                document.body.replaceChildren(frame);
+                frame.style.display = "block";
+
+            } catch {
+                button.disabled = false;
+                button.textContent = url;
+
+                alert("Unable to load this link. Try another.");
+            }
+        });
+
+        list.appendChild(button);
+    });
+
 })();
